@@ -11,6 +11,11 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@handsontable/react-wrapper": "^17.1.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "chart.js": "^4.5.1",
+    "handsontable": "^17.1.0",
+    "tailwindcss": "^4.3.0",
     "vue": "^3.5.32"
   },
   "devDependencies": {
