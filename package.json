@@ -11,10 +11,14 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@cubejs-client/core": "^1.6.53",
+    "@cubejs-client/vue3": "^1.6.53",
     "@handsontable/react-wrapper": "^17.1.0",
+    "@handsontable/vue3": "^17.1.0",
     "@tailwindcss/vite": "^4.3.0",
     "chart.js": "^4.5.1",
     "handsontable": "^17.1.0",
+    "pinia": "^3.0.4",
     "tailwindcss": "^4.3.0",
     "vue": "^3.5.32",
     "vue-router": "^4.2.0"
