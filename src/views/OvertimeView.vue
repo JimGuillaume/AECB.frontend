@@ -2,23 +2,23 @@
 import Chart from 'chart.js/auto'
 import PageContainer from '@/components/layout/PageContainer.vue';
 import Sidebar from '@/components/layout/Sidebar.vue';
+import AppLayout from '@/components/layout/AppLayout.vue';
+import Handson_table from '@/components/handson_table/handson_table.vue';
 
-//TODO: Implémenter Chart.Js
-//Deux Chart.JS
-//Top Chart : Overtime -> Month
-//Bottom Chart : Overtime -> Year To Date
-//Statistique : Total Overtime : Month && Year (Heures)
-//              
-
-
+//TODO: Implémenter ChartJS && Handson_Table
+//Deux Components
+//Top : ChartJS
+//Bottom Handson_Table
+//Statistique : Total Overtime : Month && Year (Heures)           
 </script>
 
 <template>
-    <div class="app-layout">
-        <Sidebar/>
-        <PageContainer>
-        </PageContainer>
-    </div>
+    <AppLayout>
+        <!--<TimeSelector>-->
+        <!--<ChartJS>-->
+        <!--<Handson_table/> -->
+        <!-- <Statistiques> -->
+    </AppLayout>
 </template>
 
 <style scoped>

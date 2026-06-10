@@ -6,6 +6,9 @@ import Teams from '../views/TeamView.vue'
 import Workers from '../views/WorkerView.vue'
 import Settings from '../views/SettingView.vue'
 import { requireAuth } from '../services/auth.service'
+import type { UserSession } from '../types/auth'
+
+type Role = UserSession['role']
 
 const routes = [
   { path: '/', name: 'AECB - Connexion', component: Login },
@@ -15,35 +18,30 @@ const routes = [
     component: Dashboard,
     meta: { requiresAuth: true },
   },
-
   {
     path: '/overtime',
     name: 'Heures supplémentaires',
     component: Overtime,
-    meta : { requireAuth: true}
+    meta: { requiresAuth: true },
   },
-
   {
     path: '/teams',
     name: 'Equipes',
     component: Teams,
-    meta : { requireAuth: true}
+    meta: { requiresAuth: true },
   },
-
   {
     path: '/workers',
     name: 'Employés',
     component: Workers,
-    meta : { requireAuth: true}
+    meta: { requiresAuth: true, requiredRoles: ['worker', 'chef', 'manager', 'admin'] satisfies Role[] },
   },
-
   {
     path: '/settings',
     name: 'Configuration',
     component: Settings,
-    meta : { requireAuth: true}
+    meta: { requiresAuth: true },
   },
-
 ]
 
 const router = createRouter({
@@ -62,11 +60,16 @@ router.beforeEach(async (to) => {
     return true
   }
 
-  if (user) {
-    return true
+  if (!user) {
+    return { path: '/', query: { redirect: to.fullPath } }
   }
 
-  return { path: '/', query: { redirect: to.fullPath } }
+  const requiredRoles = to.meta.requiredRoles as Role[] | undefined
+  if (requiredRoles && !requiredRoles.includes(user.role)) {
+    return '/dashboard'
+  }
+
+  return true
 })
 
 export default router

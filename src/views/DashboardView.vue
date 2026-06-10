@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import Sidebar from '@/components/layout/Sidebar.vue'
-import PageContainer from '@/components/layout/PageContainer.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import MonthlyAttendanceGrid from '@/components/attendance/MonthlyAttendanceGrid.vue'
 import { fetchCurrentProfile } from '@/services/auth.service'
 import type { AttendanceRecord } from '@/types/auth'
@@ -74,9 +73,7 @@ watch([year, month], async ([newYear, newMonth], [oldYear, oldMonth]) => {
 </script>
 
 <template>
-  <div class="app-layout">
-    <Sidebar />
-    <PageContainer>
+  <AppLayout>
       <div class="dashboard-shell">
         <section class="dashboard-hero">
           <div>
@@ -123,18 +120,10 @@ watch([year, month], async ([newYear, newMonth], [oldYear, oldMonth]) => {
           :prestations="prestations"
         />
       </div>
-    </PageContainer>
-  </div>
+  </AppLayout>
 </template>
 
 <style scoped>
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(17, 24, 39, 0.06), transparent 28%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-}
 
 .dashboard-shell {
   display: flex;

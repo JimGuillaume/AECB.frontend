@@ -1,3 +1,9 @@
+export class ApiError extends Error {
+  constructor(public readonly status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
@@ -11,6 +17,10 @@ function buildUrl(path: string) {
 
 async function handleResponse(res: Response) {
 	const ct = res.headers.get('content-type') || ''
+	if (!res.ok) {
+		const body = ct.includes('application/json') ? await res.json().catch(() => ({})) : {}
+		throw new ApiError(res.status, body.message ?? `HTTP ${res.status}`)
+	}
 	if (ct.includes('application/json')) return res.json()
 	return res.text()
 }
@@ -18,7 +28,6 @@ async function handleResponse(res: Response) {
 export async function get(path: string) {
 	const url = buildUrl(path)
 	const res = await fetch(url, { credentials: 'include' })
-	if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
 	return handleResponse(res)
 }
 
@@ -30,7 +39,6 @@ export async function post(path: string, data?: any) {
 		headers: { 'Content-Type': 'application/json' },
 		body: data === undefined ? undefined : JSON.stringify(data),
 	})
-	if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
 	return handleResponse(res)
 }
 
@@ -41,7 +49,6 @@ export async function postForm(path: string, form: FormData) {
 		credentials: 'include',
 		body: form,
 	})
-	if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
 	return handleResponse(res)
 }
 
@@ -53,14 +60,12 @@ export async function put(path: string, data?: any) {
 		headers: { 'Content-Type': 'application/json' },
 		body: data === undefined ? undefined : JSON.stringify(data),
 	})
-	if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
 	return handleResponse(res)
 }
 
 export async function del(path: string) {
 	const url = buildUrl(path)
 	const res = await fetch(url, { method: 'DELETE', credentials: 'include' })
-	if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
 	return handleResponse(res)
 }
 

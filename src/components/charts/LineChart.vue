@@ -5,6 +5,8 @@ import Chart from 'chart.js/auto';
 //TODO: Implémenter une Chart de type LINE
 //Get Data from API
 
+import { getRelativePosition } from "chart.js/helpers";
+
 
 </script>
 
@@ -12,8 +14,6 @@ import Chart from 'chart.js/auto';
     <div>
         <canvas id="LineChart" width="600" height="400">
 
-
-            sssd
         </canvas>
     </div>
 </template>

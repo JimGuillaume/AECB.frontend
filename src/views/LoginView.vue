@@ -2,7 +2,15 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
+import { ApiError } from '@/services/api'
 import type { Credentials } from '@/types/auth'
+
+const ERROR_MESSAGES: Record<number, string> = {
+  401: 'Email ou mot de passe incorrect.',
+  422: 'Veuillez renseigner votre email et votre mot de passe.',
+  429: 'Trop de tentatives. Veuillez réessayer dans quelques instants.',
+  500: 'Une erreur serveur est survenue. Veuillez réessayer plus tard.',
+}
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -35,7 +43,11 @@ async function handleSubmit() {
         await router.push(redirect)
     }
     catch (error) {
-        errorMessage.value = error instanceof Error ? error.message : 'Login Failed'
+        if (error instanceof ApiError) {
+            errorMessage.value = ERROR_MESSAGES[error.status] ?? 'Une erreur est survenue. Veuillez réessayer.'
+        } else {
+            errorMessage.value = 'Impossible de contacter le serveur. Vérifiez votre connexion.'
+        }
     } finally {
         loading.value = false
     }
