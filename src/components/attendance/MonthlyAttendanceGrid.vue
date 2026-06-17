@@ -67,28 +67,36 @@ const cells = computed<DayCell[]>(() => {
 </script>
 
 <template>
-  <section class="calendar-card">
-    <header class="calendar-card__header">
+  <section class="flex flex-col gap-5">
+    <header class="flex items-end justify-between gap-4">
       <div>
-        <p class="calendar-card__eyebrow">Prestations du mois</p>
-        <h1 class="calendar-card__title">{{ monthLabel }}</h1>
+        <p class="mb-1.5 mt-0 uppercase tracking-[0.12em] text-[0.75rem] text-gray-500">Prestations du mois</p>
+        <h1 class="m-0 text-[2rem] text-gray-900">{{ monthLabel }}</h1>
       </div>
     </header>
 
-    <div class="calendar-grid" role="grid" :aria-label="`Prestations ${monthLabel}`">
-      <div v-for="weekday in weekdays" :key="weekday" class="calendar-grid__weekday">
+    <div
+      class="grid grid-cols-7 gap-3 max-[1100px]:gap-2.5 max-md:grid-cols-1"
+      role="grid"
+      :aria-label="`Prestations ${monthLabel}`"
+    >
+      <div
+        v-for="weekday in weekdays"
+        :key="weekday"
+        class="px-3 py-2.5 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-gray-500 max-md:hidden"
+      >
         {{ weekday }}
       </div>
 
       <div
         v-for="cell in cells"
         :key="cell.key"
-        class="calendar-grid__cell"
-        :class="{ 'calendar-grid__cell--empty': !cell.isCurrentMonth }"
+        class="min-h-30 p-3 rounded-2xl bg-white border border-gray-200 shadow-[0_10px_20px_rgba(17,24,39,0.04)] flex flex-col gap-2.5 max-[1100px]:min-h-26 max-md:min-h-24"
+        :class="{ 'bg-transparent border-dashed shadow-none': !cell.isCurrentMonth }"
       >
-        <span v-if="cell.dayNumber" class="calendar-grid__day">{{ cell.dayNumber }}</span>
+        <span v-if="cell.dayNumber" class="text-[0.95rem] font-bold text-gray-900">{{ cell.dayNumber }}</span>
 
-        <div v-if="cell.prestations.length" class="calendar-grid__content">
+        <div v-if="cell.prestations.length" class="flex flex-wrap gap-1.5">
           <AttendanceCodeBadge
             v-for="prestation in cell.prestations"
             :key="prestation.attendance_id"
@@ -97,114 +105,10 @@ const cells = computed<DayCell[]>(() => {
           />
         </div>
 
-        <p v-else-if="cell.isCurrentMonth" class="calendar-grid__empty-text">
+        <p v-else-if="cell.isCurrentMonth" class="mt-auto mb-0 text-gray-400 text-[0.85rem]">
           Aucun code
         </p>
       </div>
     </div>
   </section>
 </template>
-
-<style scoped>
-.calendar-card {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.calendar-card__header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.calendar-card__eyebrow {
-  margin: 0 0 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.calendar-card__title {
-  margin: 0;
-  font-size: 2rem;
-  color: #111827;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.calendar-grid__weekday {
-  padding: 10px 12px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6b7280;
-}
-
-.calendar-grid__cell {
-  min-height: 120px;
-  padding: 12px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 20px rgba(17, 24, 39, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.calendar-grid__cell--empty {
-  background: transparent;
-  border-style: dashed;
-  box-shadow: none;
-}
-
-.calendar-grid__day {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.calendar-grid__content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.calendar-grid__empty-text {
-  margin: auto 0 0;
-  color: #9ca3af;
-  font-size: 0.85rem;
-}
-
-@media (max-width: 1100px) {
-  .calendar-grid {
-    gap: 10px;
-  }
-
-  .calendar-grid__cell {
-    min-height: 104px;
-  }
-}
-
-@media (max-width: 768px) {
-  .calendar-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-
-  .calendar-grid__weekday {
-    display: none;
-  }
-
-  .calendar-grid__cell {
-    min-height: 96px;
-  }
-}
-</style>

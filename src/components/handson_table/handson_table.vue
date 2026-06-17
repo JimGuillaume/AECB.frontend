@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 
-//Get -> Nom collonnes 
+//Get -> Nom collonnes
 const visibleKeys = computed(() => {
   const first = props.data[0]
   if (!first) return []
@@ -30,9 +30,9 @@ const columns = computed(() =>
 </script>
 
 <template>
-  <div class="table-wrapper">
-    <div v-if="props.loading" class="table-state">Chargement…</div>
-    <div v-else-if="props.error" class="table-state table-state--error">{{ props.error }}</div>
+  <div class="w-full rounded-xl overflow-hidden border border-gray-200 shadow-[0_4px_12px_rgba(17,24,39,0.06)]">
+    <div v-if="props.loading" class="p-8 text-center text-gray-500 text-[0.95rem]">Chargement…</div>
+    <div v-else-if="props.error" class="p-8 text-center text-[0.95rem] text-red-600">{{ props.error }}</div>
 
     <HotTable
       v-else
@@ -47,24 +47,3 @@ const columns = computed(() =>
     />
   </div>
 </template>
-
-<style scoped>
-.table-wrapper {
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.06);
-}
-
-.table-state {
-  padding: 32px;
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.table-state--error {
-  color: #dc2626;
-}
-</style>

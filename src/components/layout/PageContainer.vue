@@ -1,15 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <main class="page-container">
+  <main class="flex-1 p-6 min-w-0">
     <slot />
   </main>
 </template>
-
-<style scoped>
-.page-container {
-  flex: 1;
-  padding: 24px;
-  min-width: 0;
-}
-</style>

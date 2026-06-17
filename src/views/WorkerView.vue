@@ -22,24 +22,9 @@ onMounted(async () => {
 
 <template>
   <AppLayout>
-    <div class="worker-view">
-      <h1 class="worker-view__title">Workers</h1>
+    <div class="p-8 flex flex-col gap-6">
+      <h1 class="m-0 text-[1.75rem] text-gray-900">Workers</h1>
       <HandsonTable :data="data" :hidden-keys="['id']" :loading="loading" :error="error" />
     </div>
   </AppLayout>
 </template>
-
-<style scoped>
-.worker-view {
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.worker-view__title {
-  margin: 0;
-  font-size: 1.75rem;
-  color: #111827;
-}
-</style>

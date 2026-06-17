@@ -38,74 +38,28 @@ const menu = [
 </script>
 
 <template>
-  <aside class="sidebar">
-    <div class="sidebar__brand">AECB</div>
+  <aside class="w-60 min-h-screen p-5 bg-gray-900 text-white flex flex-col">
+    <div class="text-xl font-bold mb-6">AECB</div>
 
-    <nav class="sidebar__nav">
+    <nav class="flex flex-col gap-2">
       <RouterLink
         v-for="item in menu"
         :key="item.to"
         v-show="canAccess(item.minRole)"
         :to="item.to"
-        class="sidebar__link"
+        class="px-3 py-2.5 rounded-[10px] text-gray-300 no-underline"
+        active-class="bg-gray-800 !text-white"
       >
         {{ item.label }}
       </RouterLink>
     </nav>
 
-    <button class="sidebar__logout" type="button" @click="handleLogout">
+    <button
+      class="mt-auto px-3 py-2.5 border-0 rounded-[10px] bg-red-900 text-white cursor-pointer text-left hover:bg-red-800 transition-colors"
+      type="button"
+      @click="handleLogout"
+    >
       Logout
     </button>
   </aside>
 </template>
-
-<style scoped>
-.sidebar {
-  width: 240px;
-  min-height: 100vh;
-  padding: 20px;
-  background: #111827;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar__brand {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-
-.sidebar__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar__logout {
-  margin-top: auto;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 10px;
-  background: #7f1d1d;
-  color: #fff;
-  cursor: pointer;
-  text-align: left;
-}
-
-.sidebar__logout:hover {
-  background: #991b1b;
-}
-
-.sidebar__link {
-  padding: 10px 12px;
-  border-radius: 10px;
-  color: #d1d5db;
-  text-decoration: none;
-}
-
-.sidebar__link.router-link-active {
-  background: #1f2937;
-  color: #fff;
-}
-</style>

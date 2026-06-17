@@ -74,135 +74,57 @@ watch([year, month], async ([newYear, newMonth], [oldYear, oldMonth]) => {
 
 <template>
   <AppLayout>
-      <div class="dashboard-shell">
-        <section class="dashboard-hero">
-          <div>
-            <p class="dashboard-hero__eyebrow">Tableau de bord</p>
-            <h1 class="dashboard-hero__title">Prestations du mois en cours</h1>
-            <p class="dashboard-hero__subtitle">
-              Vue mensuelle pour {{ monthLabel }}
-            </p>
-          </div>
+    <div class="flex flex-col gap-5">
+      <section class="flex items-end justify-between gap-4 p-6 rounded-3xl bg-[linear-gradient(135deg,#111827_0%,#1f2937_100%)] text-gray-50 shadow-[0_20px_50px_rgba(17,24,39,0.18)]">
+        <div>
+          <p class="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] text-gray-400">Tableau de bord</p>
+          <h1 class="m-0 text-[clamp(1.6rem,3vw,2.4rem)]">Prestations du mois en cours</h1>
+          <p class="mt-2.5 mb-0 text-gray-300">
+            Vue mensuelle pour {{ monthLabel }}
+          </p>
+        </div>
 
-          <div class="dashboard-hero__filters">
-            <label class="dashboard-filter">
-              <span>Mois</span>
-              <select v-model.number="month">
-                <option v-for="option in monthOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
+        <div class="flex gap-3 flex-wrap">
+          <label class="flex flex-col gap-2 min-w-35 text-[0.85rem] text-gray-300">
+            <span>Mois</span>
+            <select
+              v-model.number="month"
+              class="px-3 py-2.5 rounded-xl border border-[rgba(255,255,255,0.18)] bg-[rgba(156,155,155,0.384)] text-white font-[inherit] focus:outline-none focus:border-[rgba(255,255,255,0.35)] focus:shadow-[0_0_0_4px_rgba(255,255,255,0.08)]"
+            >
+              <option v-for="option in monthOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
 
-            <label class="dashboard-filter">
-              <span>Année</span>
-              <select v-model.number="year">
-                <option v-for="option in yearOptions" :key="option" :value="option">
-                  {{ option }}
-                </option>
-              </select>
-            </label>
-          </div>
-        </section>
+          <label class="flex flex-col gap-2 min-w-35 text-[0.85rem] text-gray-300">
+            <span>Année</span>
+            <select
+              v-model.number="year"
+              class="px-3 py-2.5 rounded-xl border border-[rgba(255,255,255,0.18)] bg-[rgba(156,155,155,0.384)] text-white font-[inherit] focus:outline-none focus:border-[rgba(255,255,255,0.35)] focus:shadow-[0_0_0_4px_rgba(255,255,255,0.08)]"
+            >
+              <option v-for="option in yearOptions" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+          </label>
+        </div>
+      </section>
 
-        <p v-if="errorMessage" class="dashboard-state dashboard-state--error">
-          {{ errorMessage }}
-        </p>
+      <p v-if="errorMessage" class="m-0 px-5 py-4.5 rounded-2xl bg-red-50 border border-red-200 text-red-800">
+        {{ errorMessage }}
+      </p>
 
-        <p v-else-if="loading" class="dashboard-state">
-          Chargement du calendrier...
-        </p>
+      <p v-else-if="loading" class="m-0 px-5 py-4.5 rounded-2xl bg-white border border-gray-200 text-gray-700">
+        Chargement du calendrier...
+      </p>
 
-        <MonthlyAttendanceGrid
-          v-else
-          :year="year"
-          :month="month"
-          :prestations="prestations"
-        />
-      </div>
+      <MonthlyAttendanceGrid
+        v-else
+        :year="year"
+        :month="month"
+        :prestations="prestations"
+      />
+    </div>
   </AppLayout>
 </template>
-
-<style scoped>
-
-.dashboard-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.dashboard-hero {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-  color: #f9fafb;
-  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.18);
-}
-
-.dashboard-hero__filters {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.dashboard-filter {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 140px;
-  font-size: 0.85rem;
-  color: #d1d5db;
-}
-
-.dashboard-filter select {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(156, 155, 155, 0.384);
-  color: #ffffff;
-  font: inherit;
-}
-
-.dashboard-filter select:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
-}
-
-.dashboard-hero__eyebrow {
-  margin: 0 0 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-.dashboard-hero__title {
-  margin: 0;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-}
-
-.dashboard-hero__subtitle {
-  margin: 10px 0 0;
-  color: #d1d5db;
-}
-
-.dashboard-state {
-  margin: 0;
-  padding: 18px 20px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  color: #374151;
-}
-
-.dashboard-state--error {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
-}
-</style>

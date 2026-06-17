@@ -16,15 +16,8 @@ const padding = computed(() => {
 </script>
 
 <template>
-  <span class="badge" :style="{ backgroundColor: color, padding }">{{ label }}</span>
+  <span
+    class="inline-block rounded-full text-white font-semibold text-[0.85rem]"
+    :style="{ backgroundColor: color, padding }"
+  >{{ label }}</span>
 </template>
-
-<style scoped>
-.badge {
-  display: inline-block;
-  border-radius: 9999px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-</style>
