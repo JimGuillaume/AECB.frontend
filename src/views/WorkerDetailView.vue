@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Chart } from 'chart.js/auto'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PeriodSelector from '@/components/layout/PeriodSelector.vue'
 import MonthlyAttendanceGrid from '@/components/attendance/MonthlyAttendanceGrid.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get, post, put, del } from '@/services/api'
+import { useDatePeriod } from '@/composables/useDatePeriod'
+import { useAsync } from '@/composables/useAsync'
+import { useChart } from '@/composables/useChart'
 import type { AttendanceRecord } from '@/types/auth'
 import type { User } from '@/types/user'
 
@@ -19,20 +21,20 @@ const authStore = useAuthStore()
 const workerId = computed(() => Number(route.params.id))
 const isTeamLeader = computed(() => authStore.role === 'team_leader')
 
-const today = new Date()
-const year = ref(today.getFullYear())
-const month = ref(today.getMonth() + 1)
+const { year, month } = useDatePeriod()
+const { loading, error, run } = useAsync(true)
+const { loading: overtimeLoading, run: runOvertime } = useAsync()
+const chartCanvas = ref<HTMLCanvasElement | null>(null)
+const { render, destroy: destroyChart } = useChart(chartCanvas, 'bar', {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'top' } },
+  scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } },
+})
 
 const worker = ref<User | null>(null)
 const prestations = ref<AttendanceRecord[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-
 const overtimeData = ref<OvertimeRow[]>([])
-const overtimeLoading = ref(false)
-const chartCanvas = ref<HTMLCanvasElement | null>(null)
-let chart: Chart | null = null
-
 const codes = ref<AttendanceCode[]>([])
 
 // Edit modal
@@ -48,29 +50,19 @@ const modalError = ref<string | null>(null)
 const MONTH_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 async function loadWorker() {
-  loading.value = true
-  error.value = null
-  try {
+  await run(async () => {
     const res = (await get(`/users/get_user.php?id=${workerId.value}&year=${year.value}&month=${month.value}`)) as { user: User; prestations: AttendanceRecord[]; team_ids: number[] }
     worker.value = { ...res.user, team_ids: res.team_ids ?? [] }
     prestations.value = res.prestations ?? []
-  } catch (e: any) {
-    error.value = e?.message ?? 'Erreur de chargement'
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 async function loadOvertime() {
-  overtimeLoading.value = true
-  try {
+  overtimeData.value = []
+  await runOvertime(async () => {
     const res = (await get(`/overtime/get_overtime_year.php?user_id=${workerId.value}&year=${year.value}`)) as { months: OvertimeRow[] }
     overtimeData.value = res.months ?? []
-  } catch {
-    overtimeData.value = []
-  } finally {
-    overtimeLoading.value = false
-  }
+  })
 }
 
 async function loadCodes() {
@@ -81,8 +73,8 @@ async function loadCodes() {
 }
 
 function renderChart() {
-  if (!chartCanvas.value || !overtimeData.value.length) return
-  const data = {
+  if (!overtimeData.value.length) return
+  render({
     labels: MONTH_SHORT,
     datasets: [{
       label: 'Heures supplémentaires',
@@ -90,17 +82,6 @@ function renderChart() {
       backgroundColor: 'rgba(59,130,246,0.7)',
       borderRadius: 4,
     }],
-  }
-  if (chart) { chart.data = data; chart.update(); return }
-  chart = new Chart(chartCanvas.value, {
-    type: 'bar',
-    data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } },
-    },
   })
 }
 
@@ -115,12 +96,10 @@ watch([year, month], async () => {
 })
 
 watch(year, async () => {
-  chart?.destroy(); chart = null
+  destroyChart()
   await loadOvertime()
   renderChart()
 })
-
-onUnmounted(() => chart?.destroy())
 
 // Edit modal logic
 function openModal(date: string, existing: AttendanceRecord[]) {

@@ -4,31 +4,25 @@ import { useRouter } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get } from '@/services/api'
+import { useAsync } from '@/composables/useAsync'
 import type { User } from '@/types/user'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const data = ref<User[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
+const { loading, error, run } = useAsync(true)
 
 const isTeamLeader = computed(() => authStore.role === 'team_leader')
 const teamIds = computed(() => authStore.user?.team_ids ?? [])
 
-onMounted(async () => {
-  try {
-    if (isTeamLeader.value && teamIds.value.length) {
-      data.value = (await get(`/teams/get_team_users.php?team_ids=${teamIds.value.join(',')}`)) as User[]
-    } else {
-      data.value = (await get('/users/get_users.php')) as User[]
-    }
-  } catch (e: any) {
-    error.value = e.message
-  } finally {
-    loading.value = false
+onMounted(() => run(async () => {
+  if (isTeamLeader.value && teamIds.value.length) {
+    data.value = (await get(`/teams/get_team_users.php?team_ids=${teamIds.value.join(',')}`)) as User[]
+  } else {
+    data.value = (await get('/users/get_users.php')) as User[]
   }
-})
+}))
 
 function goToWorker(id: number) {
   router.push(`/workers/${id}`)

@@ -1,53 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PeriodSelector from '@/components/layout/PeriodSelector.vue'
 import MonthlyAttendanceGrid from '@/components/attendance/MonthlyAttendanceGrid.vue'
 import { fetchCurrentProfile } from '@/services/auth.service'
+import { useDatePeriod } from '@/composables/useDatePeriod'
+import { useAsync } from '@/composables/useAsync'
 import type { AttendanceRecord } from '@/types/auth'
 
-const loading = ref(true)
-const errorMessage = ref('')
+const { year, month, monthLabel } = useDatePeriod()
+const { loading, error: errorMessage, run } = useAsync(true)
 const prestations = ref<AttendanceRecord[]>([])
 
-const today = new Date()
-const year = ref(today.getFullYear())
-const month = ref(today.getMonth() + 1)
-
-const monthLabel = computed(() => {
-  return new Intl.DateTimeFormat('fr-BE', { month: 'long', year: 'numeric' }).format(
-    new Date(year.value, month.value - 1, 1),
-  )
-})
-
 async function loadProfile() {
-  loading.value = true
-  errorMessage.value = ''
-
-  try {
+  await run(async () => {
     const profile = await fetchCurrentProfile(year.value, month.value)
-
-    if (!profile) {
-      throw new Error('Impossible de charger les prestations du mois')
-    }
-
+    if (!profile) throw new Error('Impossible de charger les prestations du mois')
     year.value = profile.period.year
     month.value = profile.period.month
     prestations.value = profile.prestations ?? []
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Erreur de chargement'
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 onMounted(loadProfile)
 
 watch([year, month], async ([newYear, newMonth], [oldYear, oldMonth]) => {
-  if (newYear === oldYear && newMonth === oldMonth) {
-    return
-  }
-
+  if (newYear === oldYear && newMonth === oldMonth) return
   await loadProfile()
 })
 </script>

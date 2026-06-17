@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Chart } from 'chart.js/auto'
+import { computed, onMounted, ref, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PeriodSelector from '@/components/layout/PeriodSelector.vue'
 import AttendanceCodeBadge from '@/components/attendance/AttendanceCodeBadge.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get } from '@/services/api'
+import { useDatePeriod } from '@/composables/useDatePeriod'
+import { useAsync } from '@/composables/useAsync'
+import { useChart } from '@/composables/useChart'
 import type { AttendanceRecord } from '@/types/auth'
 import type { User } from '@/types/user'
 
@@ -22,21 +24,21 @@ const authStore = useAuthStore()
 const teamIds = computed(() => authStore.user?.team_ids ?? [])
 const teamIdsParam = computed(() => teamIds.value.join(','))
 
-const today = new Date()
-const year = ref(today.getFullYear())
-const month = ref(today.getMonth() + 1)
-const view = ref<'tableau' | 'graphe'>('tableau')
+const { year, month, monthLabel } = useDatePeriod()
+const { loading, error, run } = useAsync()
+const chartCanvas = ref<HTMLCanvasElement | null>(null)
+const { render, destroy: destroyChart } = useChart(chartCanvas, 'bar', {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'top' } },
+  scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } },
+})
 
-const loading = ref(false)
-const error = ref<string | null>(null)
+const view = ref<'tableau' | 'graphe'>('tableau')
 const members = ref<User[]>([])
 const prestations = ref<AttendanceRecord[]>([])
-
 const overtimeLoading = ref(false)
 const overtimeData = ref<Record<number, OvertimeRow[]>>({})
-
-const chartCanvas = ref<HTMLCanvasElement | null>(null)
-let chart: Chart | null = null
 
 const MONTH_FULL = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 
@@ -61,20 +63,14 @@ function getCell(userId: number, day: number): AttendanceRecord | undefined {
 
 async function loadAttendance() {
   if (!teamIdsParam.value) return
-  loading.value = true
-  error.value = null
-  try {
+  await run(async () => {
     const [usersRes, attendanceRes] = await Promise.all([
       get(`/teams/get_team_users.php?team_ids=${teamIdsParam.value}`) as Promise<User[]>,
       get(`/teams/get_team_attendance.php?team_ids=${teamIdsParam.value}&year=${year.value}&month=${month.value}`) as Promise<{ prestations: AttendanceRecord[] }>,
     ])
     members.value = usersRes
     prestations.value = attendanceRes.prestations ?? []
-  } catch (e: any) {
-    error.value = e?.message ?? 'Erreur de chargement'
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 async function loadOvertime() {
@@ -101,27 +97,16 @@ function totalOvertimeForUser(userId: number) {
 }
 
 function renderChart() {
-  if (!chartCanvas.value || !members.value.length) return
+  if (!members.value.length) return
   const labels = members.value.map(m => `${m.first_name} ${m.last_name}`)
   const hoursWorked = members.value.map(m =>
     prestations.value
       .filter(p => p.user_id === m.id && p.code_key === 'P')
       .reduce((acc, p) => acc + (p.hours_value ?? 0), 0)
   )
-  const data = {
+  render({
     labels,
     datasets: [{ label: 'Heures prestées', data: hoursWorked, backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4 }],
-  }
-  if (chart) { chart.data = data; chart.update(); return }
-  chart = new Chart(chartCanvas.value, {
-    type: 'bar',
-    data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } },
-    },
   })
 }
 
@@ -131,7 +116,7 @@ onMounted(async () => {
 })
 
 watch([year, month], async () => {
-  chart?.destroy(); chart = null
+  destroyChart()
   await loadAttendance()
   await loadOvertime()
   if (view.value === 'graphe') setTimeout(renderChart, 50)
@@ -139,15 +124,8 @@ watch([year, month], async () => {
 
 watch(view, v => {
   if (v === 'graphe') setTimeout(renderChart, 50)
-  else { chart?.destroy(); chart = null }
+  else destroyChart()
 })
-
-onUnmounted(() => chart?.destroy())
-
-const monthLabel = computed(() =>
-  new Intl.DateTimeFormat('fr-BE', { month: 'long', year: 'numeric' })
-    .format(new Date(year.value, month.value - 1, 1))
-)
 </script>
 
 <template>

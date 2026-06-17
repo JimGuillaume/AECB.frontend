@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Chart } from 'chart.js/auto'
+import { computed, onMounted, ref, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PeriodSelector from '@/components/layout/PeriodSelector.vue'
 import HandsonTable from '@/components/handson_table/handson_table.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get } from '@/services/api'
+import { useDatePeriod } from '@/composables/useDatePeriod'
+import { useAsync } from '@/composables/useAsync'
+import { useChart } from '@/composables/useChart'
 
 interface OvertimeRow {
   overtime_id: number | null
@@ -19,91 +21,54 @@ interface OvertimeRow {
   updated_at: string | null
 }
 
-const today = new Date()
-const year = ref(today.getFullYear())
-const month = ref(today.getMonth() + 1)
+const { year, month } = useDatePeriod()
+const { loading, error, run } = useAsync()
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+const { render, destroy: destroyChart } = useChart(canvasRef, 'bar', {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'top' } },
+  scales: { y: { beginAtZero: true, title: { display: true, text: 'Heures' } } },
+})
 
 const authStore = useAuthStore()
 const userId = computed(() => authStore.user?.id)
-
-const loading = ref(false)
-const error = ref<string | null>(null)
 const overtimeData = ref<OvertimeRow[]>([])
-
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-let chart: Chart | null = null
 
 const MONTH_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 const MONTH_FULL  = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
-const description = computed(
-  () => `Heures supplémentaires — ${year.value}`,
-)
+const description = computed(() => `Heures supplémentaires — ${year.value}`)
 
 async function fetchData() {
   if (!userId.value) return
-
-  loading.value = true
-  error.value = null
-
-  try {
+  await run(async () => {
     const res = (await get(
       `/overtime/get_overtime_year.php?user_id=${userId.value}&year=${year.value}`,
     )) as { months: OvertimeRow[] }
     overtimeData.value = res.months
-  } catch (e: any) {
-    error.value = e?.message ?? 'Erreur de chargement'
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 function buildChartData() {
   const sel = month.value - 1
-
-  const earnedBg  = overtimeData.value.map((_, i) => i === sel ? 'rgba(59,130,246,1)'   : 'rgba(59,130,246,0.45)')
-
+  const earnedBg = overtimeData.value.map((_, i) =>
+    i === sel ? 'rgba(59,130,246,1)' : 'rgba(59,130,246,0.45)',
+  )
   return {
     labels: MONTH_SHORT,
-    datasets: [
-      {
-        label: 'Heures Supplémentaires',
-        data: overtimeData.value.map(r => r.hours_earned),
-        backgroundColor: earnedBg,
-        borderRadius: 4,
-      },
-    ],
+    datasets: [{
+      label: 'Heures Supplémentaires',
+      data: overtimeData.value.map(r => r.hours_earned),
+      backgroundColor: earnedBg,
+      borderRadius: 4,
+    }],
   }
 }
 
 function renderChart() {
-  if (!canvasRef.value || overtimeData.value.length === 0) return
-
-  const data = buildChartData()
-
-  if (chart) {
-    chart.data = data
-    chart.update()
-    return
-  }
-
-  chart = new Chart(canvasRef.value, {
-    type: 'bar',
-    data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'top' },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: 'Heures' },
-        },
-      },
-    },
-  })
+  if (overtimeData.value.length === 0) return
+  render(buildChartData())
 }
 
 const tableData = computed(() =>
@@ -119,20 +84,14 @@ onMounted(async () => {
 })
 
 watch(year, async () => {
-  chart?.destroy()
-  chart = null
+  destroyChart()
   await fetchData()
   renderChart()
 })
 
 watch(month, () => {
-  if (!chart || overtimeData.value.length === 0) return
-  chart.data = buildChartData()
-  chart.update()
-})
-
-onUnmounted(() => {
-  chart?.destroy()
+  if (overtimeData.value.length === 0) return
+  render(buildChartData())
 })
 </script>
 
