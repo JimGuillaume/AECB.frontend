@@ -14,8 +14,9 @@ export interface UserSession {
   first_name: string;
   last_name: string;
   email: string;
-  role : 'worker' | 'chef' | 'manager' | 'admin';
+  role : 'worker' | 'team_leader' | 'manager' | 'admin';
   token?: AuthToken;
+  team_ids?: number[];
 }
 
 export interface AttendanceRecord {

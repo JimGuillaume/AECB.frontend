@@ -4,6 +4,7 @@ import Dashboard from '../views/DashboardView.vue'
 import Overtime from '../views/OvertimeView.vue'
 import Teams from '../views/TeamView.vue'
 import Workers from '../views/WorkerView.vue'
+import WorkerDetail from '../views/WorkerDetailView.vue'
 import Settings from '../views/SettingView.vue'
 import { requireAuth } from '../services/auth.service'
 import type { UserSession } from '../types/auth'
@@ -28,13 +29,19 @@ const routes = [
     path: '/teams',
     name: 'Equipes',
     component: Teams,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiredRoles: ['team_leader', 'manager', 'admin'] satisfies Role[] },
   },
   {
     path: '/workers',
     name: 'Employés',
     component: Workers,
-    meta: { requiresAuth: true, requiredRoles: ['worker', 'chef', 'manager', 'admin'] satisfies Role[] },
+    meta: { requiresAuth: true, requiredRoles: ['team_leader', 'manager', 'admin'] satisfies Role[] },
+  },
+  {
+    path: '/workers/:id',
+    name: 'Détail Employé',
+    component: WorkerDetail,
+    meta: { requiresAuth: true, requiredRoles: ['team_leader', 'manager', 'admin'] satisfies Role[] },
   },
   {
     path: '/settings',

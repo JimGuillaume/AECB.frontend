@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   year: number
   month: number
   label: string
   title: string
   description: string
-}>()
+  showMonth?: boolean
+}>(), {
+  showMonth: true,
+})
 
 const emit = defineEmits<{
   'update:year': [value: number]
@@ -47,7 +50,7 @@ const yearOptions = computed(() =>
     </div>
 
     <div class="flex gap-3 flex-wrap">
-      <label class="flex flex-col gap-2 min-w-35 text-[0.85rem] text-gray-300">
+      <label v-if="showMonth !== false" class="flex flex-col gap-2 min-w-35 text-[0.85rem] text-gray-300">
         <span>Mois</span>
         <select
           :value="month"

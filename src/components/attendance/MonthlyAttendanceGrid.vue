@@ -15,6 +15,11 @@ const props = defineProps<{
   year: number
   month: number
   prestations: AttendanceRecord[]
+  editable?: boolean
+}>()
+
+const emit = defineEmits<{
+  'click-day': [date: string, prestations: AttendanceRecord[]]
 }>()
 
 const monthLabel = computed(() => {
@@ -92,7 +97,13 @@ const cells = computed<DayCell[]>(() => {
         v-for="cell in cells"
         :key="cell.key"
         class="min-h-30 p-3 rounded-2xl bg-white border border-gray-200 shadow-[0_10px_20px_rgba(17,24,39,0.04)] flex flex-col gap-2.5 max-[1100px]:min-h-26 max-md:min-h-24"
-        :class="{ 'bg-transparent border-dashed shadow-none': !cell.isCurrentMonth }"
+        :class="{
+          'bg-transparent border-dashed shadow-none': !cell.isCurrentMonth,
+          'cursor-pointer hover:border-blue-400 hover:shadow-blue-100': props.editable && cell.isCurrentMonth,
+        }"
+        @click="props.editable && cell.isCurrentMonth && cell.date
+          ? emit('click-day', cell.key, cell.prestations)
+          : undefined"
       >
         <span v-if="cell.dayNumber" class="text-[0.95rem] font-bold text-gray-900">{{ cell.dayNumber }}</span>
 

@@ -10,7 +10,7 @@ let cachedUser: UserSession | null = null
 let checked = false
 
 export async function login(credentials: Credentials): Promise<LoginResponse> {
-  const response = (await post('/login.php', credentials)) as LoginResponse
+  const response = (await post('/auth/login.php', credentials)) as LoginResponse
   cachedUser = response.user
   checked = true
   return response
@@ -28,7 +28,7 @@ export async function fetchCurrentProfile(year?: number, month?: number): Promis
       query.set('month', String(month))
     }
 
-    const path = query.toString() ? `/me.php?${query.toString()}` : '/me.php'
+    const path = query.toString() ? `/auth/me.php?${query.toString()}` : '/auth/me.php'
     const data = (await get(path)) as CurrentMonthProfile
     cachedUser = data.user ?? null
     return data
@@ -52,7 +52,7 @@ export async function requireAuth(): Promise<UserSession | null> {
 
 export async function logout(): Promise<void> {
   try {
-    await post('/logout.php')
+    await post('/auth/logout.php')
   } finally {
     clearAuthCache()
   }

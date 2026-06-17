@@ -48,7 +48,7 @@ async function fetchData() {
 
   try {
     const res = (await get(
-      `/get_overtime_year.php?user_id=${userId.value}&year=${year.value}`,
+      `/overtime/get_overtime_year.php?user_id=${userId.value}&year=${year.value}`,
     )) as { months: OvertimeRow[] }
     overtimeData.value = res.months
   } catch (e: any) {
@@ -62,8 +62,6 @@ function buildChartData() {
   const sel = month.value - 1
 
   const earnedBg  = overtimeData.value.map((_, i) => i === sel ? 'rgba(59,130,246,1)'   : 'rgba(59,130,246,0.45)')
-  const usedBg    = overtimeData.value.map((_, i) => i === sel ? 'rgba(239,68,68,1)'    : 'rgba(239,68,68,0.45)')
-  const balanceBg = overtimeData.value.map((_, i) => i === sel ? 'rgba(16,185,129,1)'   : 'rgba(16,185,129,0.45)')
 
   return {
     labels: MONTH_SHORT,
@@ -72,18 +70,6 @@ function buildChartData() {
         label: 'Heures Supplémentaires',
         data: overtimeData.value.map(r => r.hours_earned),
         backgroundColor: earnedBg,
-        borderRadius: 4,
-      },
-      {
-        label: 'Récup',
-        data: overtimeData.value.map(r => r.hours_used),
-        backgroundColor: usedBg,
-        borderRadius: 4,
-      },
-      {
-        label: 'Récup restante',
-        data: overtimeData.value.map(r => r.balance),
-        backgroundColor: balanceBg,
         borderRadius: 4,
       },
     ],
@@ -124,8 +110,6 @@ const tableData = computed(() =>
   overtimeData.value.map(r => ({
     Mois: MONTH_FULL[r.month - 1],
     'Heures Supplémentaires': r.hours_earned,
-    Récup: r.hours_used,
-    'Récup restante': r.balance,
   })),
 )
 
@@ -162,6 +146,7 @@ onUnmounted(() => {
         label="Heures supplémentaires"
         title="Overtime de l'année"
         :description="description"
+        :show-month="false"
       />
 
       <p

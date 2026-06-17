@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getAttendanceLabel, getAttendanceColor } from '@/utils/attendanceCodes'
+import { useAttendanceCodes } from '@/composables/useAttendanceCodes'
 
 const props = defineProps<{
   code: string
   size?: 'sm' | 'md' | 'lg'
 }>()
 
-const label = computed(() => getAttendanceLabel(props.code))
-const color = computed(() => getAttendanceColor(props.code))
+const { getLabel, getColor } = useAttendanceCodes()
+
+const label = computed(() => getLabel(props.code))
+const color = computed(() => getColor(props.code))
 
 const padding = computed(() => {
   return props.size === 'sm' ? '4px 8px' : props.size === 'lg' ? '8px 12px' : '6px 10px'

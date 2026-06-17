@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 
-type Role = 'worker' | 'chef' | 'manager' | 'admin'
+type Role = 'worker' | 'team_leader' | 'manager' | 'admin'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -13,7 +13,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const roleRank: Record<Role, number> = {
   worker: 0,
-  chef: 1,
+  team_leader: 1,
   manager: 2,
   admin: 3,
 }
@@ -34,8 +34,8 @@ async function handleLogout() {
 const menu = [
   { label: 'Dashboard', to: '/', minRole: 'worker' as const },
   { label: 'Overtime', to: '/overtime', minRole: 'worker' as const },
-  { label: 'Teams', to: '/teams', minRole: 'chef' as const },
-  { label: 'Workers', to: '/workers', minRole: 'chef' as const },
+  { label: 'Teams', to: '/teams', minRole: 'team_leader' as const },
+  { label: 'Workers', to: '/workers', minRole: 'team_leader' as const },
   { label: 'Codes', to: '/codes', minRole: 'manager' as const },
 ]
 </script>

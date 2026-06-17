@@ -4,4 +4,5 @@ export interface User{
     last_name : string;
     email : string;
     role : string;
+    team_ids?: number[];
 }
