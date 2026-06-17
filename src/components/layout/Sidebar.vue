@@ -8,6 +8,9 @@ type Role = 'worker' | 'chef' | 'manager' | 'admin'
 const authStore = useAuthStore()
 const router = useRouter()
 
+const props = defineProps<{ open?: boolean }>()
+const emit = defineEmits<{ close: [] }>()
+
 const roleRank: Record<Role, number> = {
   worker: 0,
   chef: 1,
@@ -38,8 +41,20 @@ const menu = [
 </script>
 
 <template>
-  <aside class="w-60 min-h-screen p-5 bg-gray-900 text-white flex flex-col">
-    <div class="text-xl font-bold mb-6">AECB</div>
+  <aside
+    class="fixed inset-y-0 left-0 z-50 w-60 p-5 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:static md:translate-x-0 md:min-h-screen"
+    :class="props.open ? 'translate-x-0' : '-translate-x-full'"
+  >
+    <div class="flex items-center justify-between mb-6">
+      <div class="text-xl font-bold">AECB</div>
+      <button
+        class="md:hidden text-gray-400 hover:text-white text-xl border-0 bg-transparent cursor-pointer leading-none"
+        type="button"
+        @click="emit('close')"
+      >
+        ✕
+      </button>
+    </div>
 
     <nav class="flex flex-col gap-2">
       <RouterLink
@@ -49,6 +64,7 @@ const menu = [
         :to="item.to"
         class="px-3 py-2.5 rounded-[10px] text-gray-300 no-underline"
         active-class="bg-gray-800 !text-white"
+        @click="emit('close')"
       >
         {{ item.label }}
       </RouterLink>

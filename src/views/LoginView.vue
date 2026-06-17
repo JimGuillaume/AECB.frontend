@@ -57,7 +57,7 @@ async function handleSubmit() {
 <template>
     <main class="min-h-screen flex items-center justify-center p-6 sm:p-4 bg-[radial-gradient(circle_at_top_left,rgba(17,24,39,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(229,231,235,0.9),transparent_26%),linear-gradient(180deg,#f9fafb_0%,#eef2f7_100%)]">
         <form
-            class="w-full max-w-105 sm:max-w-full flex flex-col gap-3.5 p-7 sm:p-6 rounded-[20px] border border-gray-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.14)] text-gray-900 relative overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[linear-gradient(90deg,#111827_0%,#374151_100%)]"
+            class="w-full max-w-105 flex flex-col gap-3.5 p-7 sm:p-6 rounded-[20px] border border-gray-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.14)] text-gray-900 relative overflow-hidden before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[linear-gradient(90deg,#111827_0%,#374151_100%)]"
             @submit.prevent="handleSubmit"
         >
             <h1 class="mt-2.5 mb-0 text-[1.6rem] text-gray-900">Connexion</h1>
