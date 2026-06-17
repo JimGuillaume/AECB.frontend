@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PeriodSelector from '@/components/layout/PeriodSelector.vue'
-import MonthlyAttendanceGrid from '@/components/attendance/MonthlyAttendanceGrid.vue'
+import AttendanceTable from '@/components/attendance/AttendanceTable.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get, post, put, del } from '@/services/api'
 import { useDatePeriod } from '@/composables/useDatePeriod'
@@ -19,7 +19,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const workerId = computed(() => Number(route.params.id))
-const isTeamLeader = computed(() => authStore.role === 'team_leader')
+const canEdit = computed(() => ['team_leader', 'manager', 'admin'].includes(authStore.role ?? ''))
 
 const { year, month } = useDatePeriod()
 const { loading, error, run } = useAsync(true)
@@ -195,12 +195,12 @@ const modalDateLabel = computed(() =>
         Chargement…
       </p>
 
-      <MonthlyAttendanceGrid
+      <AttendanceTable
         v-else
         :year="year"
         :month="month"
         :prestations="prestations"
-        :editable="isTeamLeader"
+        :editable="canEdit"
         @click-day="openModal"
       />
 
