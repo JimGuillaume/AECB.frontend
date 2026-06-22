@@ -121,7 +121,7 @@ async function saveAttendance() {
   modalError.value = null
   try {
     if (modalExisting.value.length) {
-      const id = modalExisting.value[0].attendance_id!
+      const id = modalExisting.value[0]?.attendance_id!
       await put(`/attendance/update_attendance.php?id=${id}`, {
         code_id: modalCodeId.value,
         hours_value: modalHours.value,
@@ -152,7 +152,7 @@ async function deleteAttendance() {
   modalSaving.value = true
   modalError.value = null
   try {
-    const id = modalExisting.value[0].attendance_id!
+    const id = modalExisting.value[0]?.attendance_id!
     await del(`/attendance/delete_attendance.php?id=${id}`)
     closeModal()
     await loadWorker()
@@ -183,7 +183,7 @@ const modalDateLabel = computed(() =>
         v-model:year="year"
         v-model:month="month"
         :label="workerFullName"
-        title="Prestations du travailleur"
+        title="Prestations de Worker"
         :description="`${worker?.role ?? ''} — vue mensuelle`"
       />
 
