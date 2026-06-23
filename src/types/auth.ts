@@ -41,4 +41,5 @@ export interface CurrentMonthProfile {
     month: number;
   };
   prestations: AttendanceRecord[];
+  team_ids?: number[];
 }

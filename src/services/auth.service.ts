@@ -30,6 +30,9 @@ export async function fetchCurrentProfile(year?: number, month?: number): Promis
 
     const path = query.toString() ? `/auth/me.php?${query.toString()}` : '/auth/me.php'
     const data = (await get(path)) as CurrentMonthProfile
+    if (data.user && data.team_ids !== undefined) {
+      data.user.team_ids = data.team_ids
+    }
     cachedUser = data.user ?? null
     return data
   } catch {

@@ -50,6 +50,7 @@ const yearOptions = computed(() =>
     </div>
 
     <div class="flex gap-3 flex-wrap">
+      <slot />
       <label v-if="showMonth !== false" class="flex flex-col gap-2 min-w-35 text-[0.85rem] text-gray-300">
         <span>Mois</span>
         <select
