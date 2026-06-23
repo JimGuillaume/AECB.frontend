@@ -229,7 +229,7 @@ const modalDateLabel = computed(() =>
     <Teleport to="body">
       <div
         v-if="modalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        class="fixed inset-0 z-250 flex items-center justify-center bg-black/40"
         @click.self="closeModal"
       >
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">
