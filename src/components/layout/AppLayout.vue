@@ -11,7 +11,7 @@ const menuOpen = ref(false)
     <!-- Backdrop -->
     <div
       v-if="menuOpen"
-      class="fixed inset-0 bg-black/50 z-40 md:hidden"
+      class="fixed inset-0 bg-black/50 z-200 md:hidden"
       @click="menuOpen = false"
     />
 

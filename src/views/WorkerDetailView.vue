@@ -13,6 +13,7 @@ import type { AttendanceRecord } from '@/types/auth'
 import type { User } from '@/types/user'
 
 interface AttendanceCode { code_id: number; code_name: string; description: string; worked: boolean }
+interface WorkerSchedule { schedule_id: number; name: string; fraction: number; daily_hours: number }
 interface OvertimeRow { user_id: number; month: number; year: number; hours_earned: number; hours_used: number; balance: number }
 
 const route = useRoute()
@@ -36,6 +37,7 @@ const worker = ref<User | null>(null)
 const prestations = ref<AttendanceRecord[]>([])
 const overtimeData = ref<OvertimeRow[]>([])
 const codes = ref<AttendanceCode[]>([])
+const schedules = ref<WorkerSchedule[]>([])
 
 // Edit modal
 const modalOpen = ref(false)
@@ -72,6 +74,13 @@ async function loadCodes() {
   } catch { /* codes not critical */ }
 }
 
+async function loadSchedules() {
+  if (schedules.value.length) return
+  try {
+    schedules.value = (await get('/schedules/get_schedules.php')) as WorkerSchedule[]
+  } catch { /* schedules not critical */ }
+}
+
 function renderChart() {
   if (!overtimeData.value.length) return
   render({
@@ -86,7 +95,7 @@ function renderChart() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadWorker(), loadCodes()])
+  await Promise.all([loadWorker(), loadCodes(), loadSchedules()])
   await loadOvertime()
   renderChart()
 })
@@ -107,7 +116,8 @@ function openModal(date: string, existing: AttendanceRecord[]) {
   modalExisting.value = existing
   const first = existing[0]
   modalCodeId.value = first?.code_id ?? (codes.value[0]?.code_id ?? null)
-  modalHours.value = first?.hours_value ?? 8
+  const matchedSchedule = schedules.value.find(s => s.daily_hours === (first?.hours_value ?? null))
+  modalHours.value = first?.hours_value ?? matchedSchedule?.daily_hours ?? schedules.value[0]?.daily_hours ?? 8
   modalNotes.value = first?.notes ?? ''
   modalError.value = null
   modalOpen.value = true
@@ -253,14 +263,14 @@ const modalDateLabel = computed(() =>
 
             <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-gray-700">Heures</span>
-              <input
+              <select
                 v-model.number="modalHours"
-                type="number"
-                step="0.5"
-                min="0"
-                max="24"
                 class="px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option v-for="s in schedules" :key="s.schedule_id" :value="s.daily_hours">
+                  {{ s.name }} — {{ s.daily_hours }}h
+                </option>
+              </select>
             </label>
 
             <label class="flex flex-col gap-1.5">

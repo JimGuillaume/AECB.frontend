@@ -42,7 +42,7 @@ const menu = [
 
 <template>
   <aside
-    class="fixed inset-y-0 left-0 z-50 w-60 p-5 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:static md:translate-x-0 md:min-h-screen"
+    class="fixed inset-y-0 left-0 z-300 w-60 p-5 bg-gray-900 text-white flex flex-col transition-transform duration-300 md:static md:translate-x-0 md:min-h-screen"
     :class="props.open ? 'translate-x-0' : '-translate-x-full'"
   >
     <div class="flex items-center justify-between mb-6">
