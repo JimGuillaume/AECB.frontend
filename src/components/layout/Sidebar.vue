@@ -36,7 +36,7 @@ const menu = [
   { label: 'Overtime', to: '/overtime', minRole: 'worker' as const },
   { label: 'Teams', to: '/teams', minRole: 'team_leader' as const },
   { label: 'Workers', to: '/workers', minRole: 'team_leader' as const },
-  { label: 'Codes', to: '/codes', minRole: 'manager' as const },
+  { label: 'Paramètres', to: '/settings', minRole: 'manager' as const },
 ]
 </script>
 
