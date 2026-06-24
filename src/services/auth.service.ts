@@ -6,6 +6,7 @@ type LoginResponse = {
   user: UserSession
 }
 
+//Cache l'utilisateur pour éviter un call à chaque navigation
 let cachedUser: UserSession | null = null
 let checked = false
 
@@ -30,6 +31,7 @@ export async function fetchCurrentProfile(year?: number, month?: number): Promis
 
     const path = query.toString() ? `/auth/me.php?${query.toString()}` : '/auth/me.php'
     const data = (await get(path)) as CurrentMonthProfile
+    //copie le team id sur utilisateur
     if (data.user && data.team_ids !== undefined) {
       data.user.team_ids = data.team_ids
     }
@@ -49,6 +51,8 @@ export async function fetchCurrentUser(): Promise<UserSession | null> {
 }
 
 export async function requireAuth(): Promise<UserSession | null> {
+  //si session vérifié on skip le fetch et on renvoie direct
+  //l'utilisateur en cache
   if (checked) return cachedUser
   return fetchCurrentUser()
 }

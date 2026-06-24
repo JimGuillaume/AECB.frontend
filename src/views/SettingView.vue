@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { HotTable } from '@handsontable/vue3'
+import { registerAllModules } from 'handsontable/registry'
+import 'handsontable/styles/handsontable.min.css'
+import 'handsontable/styles/ht-theme-main.min.css'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { del, get, post, put } from '@/services/api'
 import type { AttendanceCode } from '@/types/codes'
 import type { WorkSchedule } from '@/types/schedule'
+
+registerAllModules()
 
 const codes = ref<AttendanceCode[]>([])
 const schedules = ref<WorkSchedule[]>([])
@@ -136,6 +142,104 @@ async function deleteSchedule(id: number) {
     error.value = 'Impossible de supprimer ce planning'
   }
 }
+
+// ── HandsonTable renderers ────────────────────────────────────────────────────
+
+function workedRenderer(_hot: unknown, TD: HTMLTableCellElement, _r: number, _c: number, _prop: string | number, value: unknown) {
+  const yes = value === 'Oui'
+  TD.innerHTML = `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:0.75rem;font-weight:500;background:${yes ? '#dcfce7' : '#f3f4f6'};color:${yes ? '#15803d' : '#6b7280'}">${String(value ?? '')}</span>`
+  return TD
+}
+
+function codeActionsRenderer(_hot: unknown, TD: HTMLTableCellElement, row: number) {
+  const code = codes.value[row]
+  if (!code) { TD.innerHTML = ''; return TD }
+  TD.innerHTML = `<div style="display:flex;justify-content:flex-end;gap:6px;padding:2px 0">
+    <button class="hot-edit-btn" style="padding:2px 10px;font-size:0.75rem;font-weight:500;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#4b5563;cursor:pointer">Modifier</button>
+    <button class="hot-del-btn" style="padding:2px 10px;font-size:0.75rem;font-weight:500;border:1px solid #fecaca;border-radius:6px;background:white;color:#dc2626;cursor:pointer">Supprimer</button>
+  </div>`
+  return TD
+}
+
+function scheduleActionsRenderer(_hot: unknown, TD: HTMLTableCellElement, row: number) {
+  const schedule = schedules.value[row]
+  if (!schedule) { TD.innerHTML = ''; return TD }
+  TD.innerHTML = `<div style="display:flex;justify-content:flex-end;gap:6px;padding:2px 0">
+    <button class="hot-edit-btn" style="padding:2px 10px;font-size:0.75rem;font-weight:500;border:1px solid #e5e7eb;border-radius:6px;background:white;color:#4b5563;cursor:pointer">Modifier</button>
+    <button class="hot-del-btn" style="padding:2px 10px;font-size:0.75rem;font-weight:500;border:1px solid #fecaca;border-radius:6px;background:white;color:#dc2626;cursor:pointer">Supprimer</button>
+  </div>`
+  return TD
+}
+
+// ── HandsonTable settings ─────────────────────────────────────────────────────
+
+const codesData = computed(() =>
+  codes.value.map(c => ({
+    code_name: c.code_name,
+    description: c.description ?? '',
+    worked: c.worked ? 'Oui' : 'Non',
+    actions: '',
+  }))
+)
+
+const schedulesData = computed(() =>
+  schedules.value.map(s => ({
+    name: s.name,
+    fraction: String(s.fraction),
+    daily_hours: `${s.daily_hours}h`,
+    actions: '',
+  }))
+)
+
+function onCodeCellMouseDown(e: MouseEvent, coords: { row: number; col: number }) {
+  if (coords.row < 0 || coords.col !== 3) return
+  const code = codes.value[coords.row]
+  if (!code) return
+  const target = e.target as HTMLElement
+  if (target.closest('.hot-edit-btn')) openEditCode(code)
+  else if (target.closest('.hot-del-btn')) deleteCode(code.code_id)
+}
+
+function onScheduleCellMouseDown(e: MouseEvent, coords: { row: number; col: number }) {
+  if (coords.row < 0 || coords.col !== 3) return
+  const schedule = schedules.value[coords.row]
+  if (!schedule) return
+  const target = e.target as HTMLElement
+  if (target.closest('.hot-edit-btn')) openEditSchedule(schedule)
+  else if (target.closest('.hot-del-btn')) deleteSchedule(schedule.schedule_id)
+}
+
+const codesSettings = computed(() => ({
+  data: codesData.value,
+  colHeaders: ['Code', 'Description', 'Compté travaillé', 'Actions'],
+  columns: [
+    { data: 'code_name', readOnly: true },
+    { data: 'description', readOnly: true },
+    { data: 'worked', readOnly: true, renderer: workedRenderer },
+    { data: 'actions', readOnly: true, renderer: codeActionsRenderer },
+  ],
+  rowHeaders: false,
+  stretchH: 'all' as const,
+  height: 'auto' as const,
+  licenseKey: 'non-commercial-and-evaluation',
+  afterOnCellMouseDown: onCodeCellMouseDown,
+}))
+
+const schedulesSettings = computed(() => ({
+  data: schedulesData.value,
+  colHeaders: ['Nom', 'Fraction', 'Heures / jour', 'Actions'],
+  columns: [
+    { data: 'name', readOnly: true },
+    { data: 'fraction', readOnly: true },
+    { data: 'daily_hours', readOnly: true },
+    { data: 'actions', readOnly: true, renderer: scheduleActionsRenderer },
+  ],
+  rowHeaders: false,
+  stretchH: 'all' as const,
+  height: 'auto' as const,
+  licenseKey: 'non-commercial-and-evaluation',
+  afterOnCellMouseDown: onScheduleCellMouseDown,
+}))
 </script>
 
 <template>
@@ -163,51 +267,10 @@ async function deleteSchedule(id: number) {
           </div>
 
           <div class="w-full rounded-xl overflow-hidden border border-gray-200 shadow-[0_4px_12px_rgba(17,24,39,0.06)]">
-            <table class="w-full text-sm border-collapse">
-              <thead>
-                <tr class="bg-gray-50">
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Code</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Description</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Compté travaillé</th>
-                  <th class="text-right px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="!codes.length">
-                  <td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucun code trouvé</td>
-                </tr>
-                <tr
-                  v-for="code in codes"
-                  :key="code.code_id"
-                  class="border-b border-gray-100 last:border-0"
-                >
-                  <td class="px-4 py-3 text-gray-800 font-medium">{{ code.code_name }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ code.description }}</td>
-                  <td class="px-4 py-3">
-                    <span
-                      class="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                      :class="code.worked ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-                    >
-                      {{ code.worked ? 'Oui' : 'Non' }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-right space-x-2">
-                    <button
-                      class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                      @click="openEditCode(code)"
-                    >
-                      Modifier
-                    </button>
-                    <button
-                      class="px-2.5 py-1 text-xs font-medium rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                      @click="deleteCode(code.code_id)"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-if="!codes.length" class="px-4 py-6 text-center text-sm text-gray-400">
+              Aucun code trouvé
+            </div>
+            <HotTable v-else v-bind="codesSettings" />
           </div>
         </section>
 
@@ -224,44 +287,10 @@ async function deleteSchedule(id: number) {
           </div>
 
           <div class="w-full rounded-xl overflow-hidden border border-gray-200 shadow-[0_4px_12px_rgba(17,24,39,0.06)]">
-            <table class="w-full text-sm border-collapse">
-              <thead>
-                <tr class="bg-gray-50">
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Nom</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Fraction</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Heures / jour</th>
-                  <th class="text-right px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="!schedules.length">
-                  <td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucun planning trouvé</td>
-                </tr>
-                <tr
-                  v-for="schedule in schedules"
-                  :key="schedule.schedule_id"
-                  class="border-b border-gray-100 last:border-0"
-                >
-                  <td class="px-4 py-3 text-gray-800 font-medium">{{ schedule.name }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ schedule.fraction }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ schedule.daily_hours }}h</td>
-                  <td class="px-4 py-3 text-right space-x-2">
-                    <button
-                      class="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                      @click="openEditSchedule(schedule)"
-                    >
-                      Modifier
-                    </button>
-                    <button
-                      class="px-2.5 py-1 text-xs font-medium rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                      @click="deleteSchedule(schedule.schedule_id)"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-if="!schedules.length" class="px-4 py-6 text-center text-sm text-gray-400">
+              Aucun planning trouvé
+            </div>
+            <HotTable v-else v-bind="schedulesSettings" />
           </div>
         </section>
       </template>
@@ -271,7 +300,7 @@ async function deleteSchedule(id: number) {
     <Teleport to="body">
       <div
         v-if="codeModal.show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        class="fixed inset-0 z-9999 flex items-center justify-center bg-black/40"
         @click.self="codeModal.show = false"
       >
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">
@@ -329,7 +358,7 @@ async function deleteSchedule(id: number) {
     <Teleport to="body">
       <div
         v-if="scheduleModal.show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        class="fixed inset-0 z-9999 flex items-center justify-center bg-black/40"
         @click.self="scheduleModal.show = false"
       >
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">

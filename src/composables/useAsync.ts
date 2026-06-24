@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 
+//Les fonctions envoie un useAsync(true) quand elles doivent charger des
+//infos
 export function useAsync(initialLoading = false) {
   const loading = ref(initialLoading)
   const error = ref<string | null>(null)

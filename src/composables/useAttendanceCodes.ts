@@ -8,6 +8,7 @@ interface AttendanceCode {
   worked: boolean
 }
 
+//Permet de changer les couleurs sans faire des updates db
 const COLOR_MAP: Record<string, string> = {
   P: 'green',
   C: 'blue',

@@ -8,10 +8,14 @@ export class ApiError extends Error {
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
 function buildUrl(path: string) {
+	//Vérifie si l'url est déja complète
 	if (/^https?:\/\//i.test(path)) return path
 
+	//Enlève les "/" en fin d'url
 	const base = API_BASE_URL.replace(/\/+$/, '')
+	//enoève les "/" en début pour les paths
 	const clean = path.replace(/^\/+/, '')
+	//Construit l'url final par base / clean
 	return `${base}/${clean}`
 }
 
@@ -27,6 +31,7 @@ async function handleResponse(res: Response) {
 
 export async function get(path: string) {
 	const url = buildUrl(path)
+	//envoie les credentials
 	const res = await fetch(url, { credentials: 'include' })
 	return handleResponse(res)
 }

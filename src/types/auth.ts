@@ -16,6 +16,8 @@ export interface UserSession {
   email: string;
   role : 'worker' | 'team_leader' | 'manager' | 'admin';
   token?: AuthToken;
+
+  //team_ids est reçu par fetchCurrentProfile
   team_ids?: number[];
 }
 

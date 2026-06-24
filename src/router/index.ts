@@ -29,6 +29,7 @@ const routes = [
     path: '/teams',
     name: 'Equipes',
     component: Teams,
+    //S'assure que l'utilisateur ait les bons rôles pour accéder aux pages suivantes
     meta: { requiresAuth: true, requiredRoles: ['team_leader', 'manager', 'admin'] satisfies Role[] },
   },
   {
@@ -59,6 +60,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const user = await requireAuth()
 
+  //Si l'utilisateur est connecté -> Redirige vers dashboard si il essaye d'accéder
+  //au login
   if (to.path === '/' && user) {
     return '/dashboard'
   }
@@ -71,6 +74,8 @@ router.beforeEach(async (to) => {
     return { path: '/', query: { redirect: to.fullPath } }
   }
 
+  //Si l'utilisateur essaye de changer l'url manuellement et qu'il n'a pas les accès
+  //renvoie au dashboard au lieu de lancer une 403 - pas autorisé
   const requiredRoles = to.meta.requiredRoles as Role[] | undefined
   if (requiredRoles && !requiredRoles.includes(user.role)) {
     return '/dashboard'

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { HotTable } from '@handsontable/vue3'
+import { registerAllModules } from 'handsontable/registry'
+import 'handsontable/styles/handsontable.min.css'
+import 'handsontable/styles/ht-theme-main.min.css'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { get } from '@/services/api'
 import { useAsync } from '@/composables/useAsync'
 import type { User } from '@/types/user'
 import type { Team } from '@/types/team'
+
+registerAllModules()
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -38,6 +44,35 @@ onMounted(() => run(async () => {
 function goToWorker(id: number) {
   router.push(`/workers/${id}`)
 }
+
+function buildWorkerSettings(members: User[]) {
+  return {
+    data: members.map(m => ({
+      first_name: m.first_name,
+      last_name: m.last_name,
+      email: m.email,
+      role: m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1) : '',
+    })),
+    colHeaders: ['Prénom', 'Nom', 'Email', 'Rôle'],
+    columns: [
+      { data: 'first_name', readOnly: true },
+      { data: 'last_name', readOnly: true },
+      { data: 'email', readOnly: true },
+      { data: 'role', readOnly: true },
+    ],
+    rowHeaders: false,
+    stretchH: 'all' as const,
+    height: 'auto' as const,
+    licenseKey: 'non-commercial-and-evaluation',
+    afterOnCellMouseDown(_e: MouseEvent, coords: { row: number }) {
+      if (coords.row < 0) return
+      const worker = members[coords.row]
+      if (worker) goToWorker(worker.id)
+    },
+  }
+}
+
+const workersSettings = computed(() => buildWorkerSettings(workers.value))
 </script>
 
 <template>
@@ -58,65 +93,34 @@ function goToWorker(id: number) {
             <div class="px-4 py-3 bg-white border-b border-gray-200">
               <h2 class="m-0 text-sm font-semibold text-gray-700">{{ group.team.name }}</h2>
             </div>
-            <table class="w-full text-sm border-collapse">
-              <thead>
-                <tr class="bg-gray-50">
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Prénom</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Nom</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Email</th>
-                  <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Rôle</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="!group.members.length">
-                  <td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucun travailleur dans cette équipe</td>
-                </tr>
-                <tr
-                  v-for="worker in group.members"
-                  :key="worker.id"
-                  class="border-b border-gray-100 last:border-0 cursor-pointer hover:bg-blue-50 transition-colors"
-                  @click="goToWorker(worker.id)"
-                >
-                  <td class="px-4 py-3 text-gray-800">{{ worker.first_name }}</td>
-                  <td class="px-4 py-3 text-gray-800">{{ worker.last_name }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ worker.email }}</td>
-                  <td class="px-4 py-3 text-gray-600 capitalize">{{ worker.role }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-if="!group.members.length" class="px-4 py-6 text-center text-sm text-gray-400">
+              Aucun travailleur dans cette équipe
+            </div>
+            <div v-else class="workers-table">
+              <HotTable v-bind="buildWorkerSettings(group.members)" />
+            </div>
           </div>
         </div>
       </template>
 
-      <!-- Flat list — team leaders -->
+      <!-- Flat list — team leaders and others -->
       <div v-else class="w-full rounded-xl overflow-hidden border border-gray-200 shadow-[0_4px_12px_rgba(17,24,39,0.06)]">
-        <table class="w-full text-sm border-collapse">
-          <thead>
-            <tr class="bg-gray-50">
-              <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Prénom</th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Nom</th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Email</th>
-              <th class="text-left px-4 py-3 font-semibold text-gray-700 border-b border-gray-200">Rôle</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="!workers.length">
-              <td colspan="4" class="px-4 py-6 text-center text-gray-400">Aucun travailleur trouvé</td>
-            </tr>
-            <tr
-              v-for="worker in workers"
-              :key="worker.id"
-              class="border-b border-gray-100 last:border-0 cursor-pointer hover:bg-blue-50 transition-colors"
-              @click="goToWorker(worker.id)"
-            >
-              <td class="px-4 py-3 text-gray-800">{{ worker.first_name }}</td>
-              <td class="px-4 py-3 text-gray-800">{{ worker.last_name }}</td>
-              <td class="px-4 py-3 text-gray-600">{{ worker.email }}</td>
-              <td class="px-4 py-3 text-gray-600 capitalize">{{ worker.role }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-if="!workers.length" class="px-4 py-6 text-center text-sm text-gray-400">
+          Aucun travailleur trouvé
+        </div>
+        <div v-else class="workers-table">
+          <HotTable v-bind="workersSettings" />
+        </div>
       </div>
     </div>
   </AppLayout>
 </template>
+
+<style scoped>
+.workers-table :deep(.htCore td) {
+  cursor: pointer;
+}
+.workers-table :deep(.htCore tbody tr:hover td) {
+  background-color: #eff6ff;
+}
+</style>

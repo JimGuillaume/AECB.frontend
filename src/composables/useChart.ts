@@ -12,6 +12,8 @@ export function useChart(
 
   function render(data: ChartData) {
     if (!canvasRef.value) return
+    //Si chart déja instancié, réutilise celle-ci pour éviter un blink
+    //au moment du rendu
     if (chart) {
       chart.data = data
       chart.update()

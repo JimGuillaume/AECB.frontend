@@ -24,6 +24,7 @@ const currentRank = computed(() => {
   return roleRank[currentRole.value]
 })
 
+//Pour accéder aux parties de l'app l'utilisateur doit avoir un rank supérieur à celui donné
 const canAccess = (minRole: Role) => currentRank.value >= roleRank[minRole]
 
 async function handleLogout() {
@@ -32,11 +33,11 @@ async function handleLogout() {
 }
 
 const menu = [
-  { label: 'Dashboard', to: '/', minRole: 'worker' as const },
-  { label: 'Overtime', to: '/overtime', minRole: 'worker' as const },
-  { label: 'Teams', to: '/teams', minRole: 'team_leader' as const },
-  { label: 'Workers', to: '/workers', minRole: 'team_leader' as const },
-  { label: 'Paramètres', to: '/settings', minRole: 'manager' as const },
+  { label: 'Dashboard', to: '/', minRole: 'worker' as const, icon: 'icofont-home' },
+  { label: 'Overtime', to: '/overtime', minRole: 'worker' as const, icon: 'icofont-clock-time' },
+  { label: 'Teams', to: '/teams', minRole: 'team_leader' as const, icon: 'icofont-people' },
+  { label: 'Workers', to: '/workers', minRole: 'team_leader' as const, icon: 'icofont-worker' },
+  { label: 'Paramètres', to: '/settings', minRole: 'manager' as const, icon: 'icofont-ui-settings' },
 ]
 </script>
 
@@ -62,19 +63,21 @@ const menu = [
         :key="item.to"
         v-show="canAccess(item.minRole)"
         :to="item.to"
-        class="px-3 py-2.5 rounded-[10px] text-gray-300 no-underline"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-gray-300 no-underline"
         active-class="bg-gray-800 !text-white"
         @click="emit('close')"
       >
+        <i :class="[item.icon, 'text-lg']"></i>
         {{ item.label }}
       </RouterLink>
     </nav>
 
     <button
-      class="mt-auto px-3 py-2.5 border-0 rounded-[10px] bg-red-900 text-white cursor-pointer text-left hover:bg-red-800 transition-colors"
+      class="mt-auto flex items-center gap-3 px-3 py-2.5 border-0 rounded-[10px] bg-red-900 text-white cursor-pointer text-left hover:bg-red-800 transition-colors"
       type="button"
       @click="handleLogout"
     >
+      <i class="icofont-logout text-lg"></i>
       Logout
     </button>
   </aside>
